@@ -11,16 +11,15 @@ import base64
 
 import httpx
 
+from app.clients.vlm.normalize import normalize_assessment
 from app.clients.vlm.prompt import SYSTEM_PROMPT, USER_PROMPT
 from app.clients.vlm.schemas import (
     ChatCompletionRequest,
     ChatMessage,
     ChatMessageContent,
-    RawAssessmentPayload,
     try_parse_raw_payload,
 )
 from app.core.logging import get_logger
-from app.domain.enums import Cleanliness, MessType, Severity
 from app.domain.errors import VLMResponseError, VLMUnavailableError
 from app.domain.models import CleanlinessAssessment
 
@@ -77,7 +76,7 @@ class OpenAICompatibleVLMClient:
             raise VLMResponseError(
                 f"VLM response could not be parsed as JSON: {raw_text[:200]!r}"
             )
-        return self._normalize(parsed)
+        return normalize_assessment(parsed)
 
     async def _call_with_retries(self, payload: ChatCompletionRequest) -> str:
         last_error: Exception | None = None
@@ -153,33 +152,3 @@ class OpenAICompatibleVLMClient:
         finally:
             if owns_client:
                 await client.aclose()
-
-    @staticmethod
-    def _normalize(raw: RawAssessmentPayload) -> CleanlinessAssessment:
-        try:
-            cleanliness = Cleanliness(raw.cleanliness.strip().lower())
-        except ValueError:
-            cleanliness = Cleanliness.UNCLEAR
-
-        mess_types = tuple(MessType.coerce(mt.strip().lower()) for mt in raw.mess_types)
-
-        try:
-            severity = Severity(raw.severity.strip().lower())
-        except ValueError:
-            severity = Severity.NONE if cleanliness == Cleanliness.CLEAN else Severity.MODERATE
-
-        if cleanliness == Cleanliness.CLEAN:
-            severity = Severity.NONE
-        elif severity == Severity.NONE:
-            severity = Severity.MINOR
-
-        confidence = max(0.0, min(1.0, raw.confidence))
-
-        return CleanlinessAssessment(
-            cleanliness=cleanliness,
-            mess_types=mess_types,
-            severity=severity,
-            observations=tuple(raw.observations),
-            confidence=confidence,
-            raw_description=raw.raw_description,
-        )

@@ -3,6 +3,7 @@ instantiated at import time elsewhere — always injected via Depends."""
 from __future__ import annotations
 
 from functools import lru_cache
+from typing import Literal
 
 from pydantic import Field
 from pydantic_settings import BaseSettings, SettingsConfigDict
@@ -11,13 +12,26 @@ from pydantic_settings import BaseSettings, SettingsConfigDict
 class Settings(BaseSettings):
     model_config = SettingsConfigDict(env_file=".env", env_prefix="", extra="ignore")
 
-    # --- VLM connection ---
+    # --- VLM provider selection ---
+    vlm_provider: Literal["local", "bedrock"] = Field(default="local")
+
+    # --- Local, OpenAI-compatible VLM connection (used when vlm_provider=local) ---
     vlm_base_url: str = Field(default="http://192.168.1.123:1234/v1")
     vlm_api_key: str = Field(default="not-needed")
     vlm_model: str = Field(default="qwen3.8-27b-ridge")
     vlm_timeout_seconds: float = Field(default=60.0)
     vlm_max_retries: int = Field(default=3)
     vlm_retry_backoff_seconds: float = Field(default=1.5)
+
+    # --- AWS Bedrock connection (used when vlm_provider=bedrock) ---
+    # Credentials are NOT configured here — boto3 resolves them from the
+    # standard AWS credential chain (env vars, ~/.aws/credentials, or an
+    # attached IAM role). Only non-secret routing config lives in Settings.
+    bedrock_model_id: str = Field(default="amazon.nova-lite-v1:0")
+    bedrock_region: str = Field(default="us-east-1")
+    bedrock_max_tokens: int = Field(default=800)
+    bedrock_max_retries: int = Field(default=3)
+    bedrock_retry_backoff_seconds: float = Field(default=1.5)
 
     # --- Image processing ---
     image_max_dimension_px: int = Field(default=1536)

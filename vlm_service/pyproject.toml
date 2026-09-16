@@ -1,7 +1,7 @@
 [project]
 name = "site-cleanliness-service"
 version = "1.0.0"
-description = "Backend service that assesses site image cleanliness via a locally-hosted VLM"
+description = "Backend service that assesses site image cleanliness via a locally-hosted VLM or an AWS bedrock hosted VLM"
 requires-python = ">=3.11"
 dependencies = [
     "fastapi==0.115.0",
@@ -10,6 +10,8 @@ dependencies = [
     "pydantic==2.9.2",
     "pydantic-settings==2.5.2",
     "Pillow==10.4.0",
+    "boto3>=1.41.0",
+    "botocore[crt]>=1.43.95",
 ]
 
 [project.optional-dependencies]

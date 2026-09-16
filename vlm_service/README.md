@@ -30,6 +30,37 @@ pip install -r requirements.txt
 cp .env.example .env   # adjust VLM_BASE_URL etc. if needed
 ```
 
+## Choosing a VLM provider: local vs. AWS Bedrock
+
+The service supports two interchangeable `VLMClient` implementations,
+selected via `VLM_PROVIDER` in `.env` — nothing else in the app changes.
+
+**Local, OpenAI-compatible server** (`VLM_PROVIDER=local`, the default):
+uses `VLM_BASE_URL` / `VLM_API_KEY` / `VLM_MODEL` as before.
+
+**AWS Bedrock** (`VLM_PROVIDER=bedrock`): uses `BEDROCK_MODEL_ID` and
+`BEDROCK_REGION`. AWS credentials are **not** set in `.env` — configure
+them via `aws configure`, the standard `AWS_ACCESS_KEY_ID` /
+`AWS_SECRET_ACCESS_KEY` / `AWS_SESSION_TOKEN` environment variables, or an
+attached IAM role if running on EC2/ECS/Lambda. Before it'll work you also
+need to:
+1. Enable access to your chosen model in the Bedrock console (Model
+   access page) for your account/region — this is a one-time,
+   per-account/region approval step separate from IAM.
+2. Grant the IAM principal running the app `bedrock:InvokeModel` (and
+   `bedrock:Converse`) permission, scoped to the model's ARN.
+
+Example `.env` for Bedrock:
+```
+VLM_PROVIDER=bedrock
+BEDROCK_MODEL_ID=amazon.nova-lite-v1:0
+BEDROCK_REGION=us-east-1
+```
+
+Swapping providers is a config change only — `AnalysisOrchestrator` depends
+on the `VLMClient` interface (`app/domain/interfaces.py`), not on either
+concrete adapter. See `app/core/container.py` for the single branch point.
+
 ## Run the server
 
 ```bash
