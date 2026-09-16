@@ -1,0 +1,79 @@
+"""Composition root. Builds concrete adapters/services from Settings.
+
+Nothing here is instantiated at import time — `Container` instances are
+created inside the FastAPI lifespan (see `main.py`) and handed out via
+`Depends`, so tests can build their own `Container` (or bypass it entirely)
+with fakes instead of real adapters.
+"""
+from __future__ import annotations
+
+from dataclasses import dataclass
+
+import httpx
+
+from app.clients.filesystem.image_source import FilesystemImageSource
+from app.clients.vlm.client import OpenAICompatibleVLMClient
+from app.core.config import Settings
+from app.repositories.jobs.sqlite import SQLiteJobsRepository
+from app.repositories.results.sqlite import SQLiteResultsRepository
+from app.services.analysis.image_processor import ImagePreprocessor
+from app.services.analysis.orchestrator import AnalysisOrchestrator
+from app.services.review.reviewer import ReviewService
+
+
+@dataclass
+class Container:
+    settings: Settings
+    orchestrator: AnalysisOrchestrator
+    review_service: ReviewService
+    http_client: httpx.AsyncClient
+
+    async def aclose(self) -> None:
+        await self.http_client.aclose()
+
+
+def build_container(settings: Settings) -> Container:
+    http_client = httpx.AsyncClient(
+        base_url=settings.vlm_base_url,
+        timeout=settings.vlm_timeout_seconds,
+        headers={"Authorization": f"Bearer {settings.vlm_api_key}"},
+    )
+
+    vlm_client = OpenAICompatibleVLMClient(
+        base_url=settings.vlm_base_url,
+        api_key=settings.vlm_api_key,
+        model=settings.vlm_model,
+        timeout_seconds=settings.vlm_timeout_seconds,
+        max_retries=settings.vlm_max_retries,
+        retry_backoff_seconds=settings.vlm_retry_backoff_seconds,
+        http_client=http_client,
+    )
+
+    image_source = FilesystemImageSource(
+        allowed_extensions=settings.image_allowed_extensions,
+        min_size_bytes=settings.image_min_size_bytes,
+    )
+    image_preprocessor = ImagePreprocessor(
+        max_dimension_px=settings.image_max_dimension_px,
+        jpeg_quality=settings.image_jpeg_quality,
+    )
+
+    results_repository = SQLiteResultsRepository(settings.database_path)
+    jobs_repository = SQLiteJobsRepository(settings.database_path)
+
+    orchestrator = AnalysisOrchestrator(
+        image_source=image_source,
+        image_preprocessor=image_preprocessor,
+        vlm_client=vlm_client,
+        results_repository=results_repository,
+        jobs_repository=jobs_repository,
+        review_confidence_threshold=settings.review_confidence_threshold,
+    )
+    review_service = ReviewService(results_repository=results_repository)
+
+    return Container(
+        settings=settings,
+        orchestrator=orchestrator,
+        review_service=review_service,
+        http_client=http_client,
+    )
