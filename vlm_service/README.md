@@ -24,10 +24,20 @@ instantiated at import time; the `Container` is built once in the FastAPI
 ## Setup
 
 ```bash
-python3.11 -m venv .venv
-source .venv/bin/activate
-pip install -r requirements.txt
+uv sync
 cp .env.example .env   # adjust VLM_BASE_URL etc. if needed
+```
+
+By default, `uv sync` will create a virtual environment in `.venv` and install all project and development dependencies defined in `pyproject.toml`.
+
+If you prefer to activate the virtual environment manually:
+```bash
+# On macOS/Linux:
+source .venv/bin/activate
+# On Windows (Command Prompt):
+# .venv\Scripts\activate.bat
+# On Windows (PowerShell):
+# .venv\Scripts\Activate.ps1
 ```
 
 ## Choosing a VLM provider: local vs. AWS Bedrock
@@ -64,7 +74,7 @@ concrete adapter. See `app/core/container.py` for the single branch point.
 ## Run the server
 
 ```bash
-uvicorn app.main:app --reload --port 8000
+uv run uvicorn app.main:app --reload --port 8000
 ```
 
 Health check: `GET http://localhost:8000/health`
@@ -120,8 +130,7 @@ curl -X POST http://localhost:8000/api/v1/review/{result_id} \
 ## Tests
 
 ```bash
-pip install -r requirements.txt  # includes pytest, pytest-asyncio
-pytest
+uv run pytest
 ```
 
 `tests/test_orchestrator.py` exercises `AnalysisOrchestrator` entirely
