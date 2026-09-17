@@ -38,6 +38,7 @@ class OpenAICompatibleVLMClient:
         max_retries: int = 3,
         retry_backoff_seconds: float = 1.5,
         http_client: httpx.AsyncClient | None = None,
+        extra_headers: dict[str, str] | None = None,
     ) -> None:
         self._base_url = base_url.rstrip("/")
         self._api_key = api_key
@@ -47,6 +48,10 @@ class OpenAICompatibleVLMClient:
         self._retry_backoff = retry_backoff_seconds
         # Allow injection of a shared/test client; otherwise own one lazily.
         self._external_client = http_client
+        # Optional provider-specific headers (e.g. OpenRouter's HTTP-Referer
+        # / X-Title for attribution). Ignored entirely if an external
+        # http_client is injected, since that client's headers already won.
+        self._extra_headers = extra_headers or {}
 
     def _build_request(self, image_bytes: bytes, mime_type: str) -> ChatCompletionRequest:
         b64 = base64.b64encode(image_bytes).decode("ascii")
@@ -86,7 +91,7 @@ class OpenAICompatibleVLMClient:
             client = httpx.AsyncClient(
                 base_url=self._base_url,
                 timeout=self._timeout,
-                headers={"Authorization": f"Bearer {self._api_key}"},
+                headers={"Authorization": f"Bearer {self._api_key}", **self._extra_headers},
             )
         try:
             for attempt in range(1, self._max_retries + 1):

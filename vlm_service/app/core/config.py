@@ -22,6 +22,11 @@ class Settings(BaseSettings):
     vlm_timeout_seconds: float = Field(default=60.0)
     vlm_max_retries: int = Field(default=3)
     vlm_retry_backoff_seconds: float = Field(default=1.5)
+    # Optional attribution headers some OpenAI-compatible providers use
+    # (e.g. OpenRouter's leaderboard attribution). Left blank/unset for
+    # providers that don't use them (local servers, etc.) — no effect there.
+    vlm_http_referer: str | None = Field(default=None)
+    vlm_x_title: str | None = Field(default=None)
 
     # --- AWS Bedrock connection (used when vlm_provider=bedrock) ---
     # Credentials are NOT configured here — boto3 resolves them from the

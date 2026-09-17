@@ -50,10 +50,16 @@ def _build_vlm_client(settings: Settings) -> tuple[VLMClient, httpx.AsyncClient 
         )
         return vlm_client, None
 
+    extra_headers: dict[str, str] = {}
+    if settings.vlm_http_referer:
+        extra_headers["HTTP-Referer"] = settings.vlm_http_referer
+    if settings.vlm_x_title:
+        extra_headers["X-Title"] = settings.vlm_x_title
+
     http_client = httpx.AsyncClient(
         base_url=settings.vlm_base_url,
         timeout=settings.vlm_timeout_seconds,
-        headers={"Authorization": f"Bearer {settings.vlm_api_key}"},
+        headers={"Authorization": f"Bearer {settings.vlm_api_key}", **extra_headers},
     )
     vlm_client = OpenAICompatibleVLMClient(
         base_url=settings.vlm_base_url,

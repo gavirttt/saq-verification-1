@@ -43,10 +43,10 @@ source .venv/bin/activate
 ## Choosing a VLM provider: local vs. AWS Bedrock
 
 The service supports two interchangeable `VLMClient` implementations,
-selected via `VLM_PROVIDER` in `.env` — nothing else in the app changes.
+selected via `VLM_PROVIDER` in `.env`.
 
 **Local, OpenAI-compatible server** (`VLM_PROVIDER=local`, the default):
-uses `VLM_BASE_URL` / `VLM_API_KEY` / `VLM_MODEL` as before.
+uses `VLM_BASE_URL` / `VLM_API_KEY` / `VLM_MODEL` / `VLM_HTTP_REFERER` (optional) / `VLM_X_TITLE` (optional). 
 
 **AWS Bedrock** (`VLM_PROVIDER=bedrock`): uses `BEDROCK_MODEL_ID` and
 `BEDROCK_REGION`. AWS credentials are **not** set in `.env` — configure
