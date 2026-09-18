@@ -13,9 +13,9 @@ class Settings(BaseSettings):
     model_config = SettingsConfigDict(env_file=".env", env_prefix="", extra="ignore")
 
     # --- VLM provider selection ---
-    vlm_provider: Literal["local", "bedrock"] = Field(default="local")
+    vlm_provider: Literal["openai", "bedrock"] = Field(default="openai")
 
-    # --- Local, OpenAI-compatible VLM connection (used when vlm_provider=local) ---
+    # --- OpenAI-compatible VLM connection (used when vlm_provider=openai) ---
     vlm_base_url: str = Field(default="http://192.168.1.123:1234/v1")
     vlm_api_key: str = Field(default="not-needed")
     vlm_model: str = Field(default="qwen3.8-27b-ridge")
@@ -25,7 +25,7 @@ class Settings(BaseSettings):
     vlm_max_tokens: int = Field(default=1500)
     # Optional attribution headers some OpenAI-compatible providers use
     # (e.g. OpenRouter's leaderboard attribution). Left blank/unset for
-    # providers that don't use them (local servers, etc.) — no effect there.
+    # providers that don't use them.
     vlm_http_referer: str | None = Field(default=None)
     vlm_x_title: str | None = Field(default=None)
 

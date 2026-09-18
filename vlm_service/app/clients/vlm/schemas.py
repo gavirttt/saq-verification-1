@@ -1,6 +1,5 @@
-"""OpenAI-compatible chat-completion wire schemas for the local VLM.
-
-These types are intentionally private to `clients.vlm` — nothing outside
+"""
+These types are intentionally private — nothing outside
 this package may import them. The rest of the codebase only ever sees
 `app.domain.models.InstallationAssessment`.
 """
