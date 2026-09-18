@@ -12,11 +12,17 @@ from app.domain.models import InstallationAssessment
 
 
 def normalize_assessment(raw: RawAssessmentPayload) -> InstallationAssessment:
-    installation_status = InstallationStatus.coerce(raw.installation_status, fallback=InstallationStatus.INCOMPLETE)
-    device_power_status = DevicePowerStatus.coerce(raw.device_power_status, fallback=DevicePowerStatus.UNCLEAR)
-    workmanship_quality = WorkmanshipQuality.coerce(raw.workmanship_quality, fallback=WorkmanshipQuality.ACCEPTABLE)
+    installation_status = InstallationStatus.coerce(
+        raw.installation_status.strip().lower(), fallback=InstallationStatus.INCOMPLETE
+    )
+    device_power_status = DevicePowerStatus.coerce(
+        raw.device_power_status.strip().lower(), fallback=DevicePowerStatus.UNCLEAR
+    )
+    workmanship_quality = WorkmanshipQuality.coerce(
+        raw.workmanship_quality.strip().lower(), fallback=WorkmanshipQuality.ACCEPTABLE
+    )
 
-    compliance_flags = tuple(ComplianceFlags.coerce(mt.strip().lower()) for mt in raw.compliance_flags)
+    compliance_flags = tuple(ComplianceFlags.coerce(c_f.strip().lower()) for c_f in raw.compliance_flags)
 
     confidence = max(0.0, min(1.0, raw.confidence))
 
