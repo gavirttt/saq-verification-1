@@ -4,30 +4,33 @@ from __future__ import annotations
 from enum import Enum
 
 
-class Cleanliness(str, Enum):
-    CLEAN = "clean"
-    MESSY = "messy"
+class InstallationStatus(str, Enum):
+    PASS = "pass"
+    FAIL = "fail"
+    INCOMPLETE = "incomplete"
+
+class DevicePowerStatus(str, Enum):
+    GREEN = "green"
+    RED = "red"
+    OFF = "off"
     UNCLEAR = "unclear"
+    NOTAPPLICABLE = "na"
 
+class WorkmanshipQuality(str, Enum):
+    PROFESSIONAL = "professional"
+    ACCEPTABLE = "acceptable"
+    POOR = "poor"
 
-class Severity(str, Enum):
-    NONE = "none"
-    MINOR = "minor"
-    MODERATE = "moderate"
-    SEVERE = "severe"
-
-
-class MessType(str, Enum):
-    CLUTTER = "clutter"
-    DEBRIS = "debris"
-    STAINS = "stains"
-    DISORGANIZED_CABLING = "disorganized_cabling"
-    OBSTRUCTION = "obstruction"
-    POOR_HOUSEKEEPING = "poor_housekeeping"
+class ComplianceFlags(str, Enum):
+    UNSECURED_CABLES = "unsecured_cables"
+    MISSING_STRAIN_RELIEF = "missing_strain_relief"
+    SHARP_FIBER_BENDS = "sharp_fiber_bends"
+    LOOSE_LEFTOVER_LINES = "loose_leftover_lines"
+    UNPOWERED_DEVICE = "unpowered_device"
     OTHER = "other"
 
     @classmethod
-    def coerce(cls, value: str) -> "MessType":
+    def coerce(cls, value: str) -> "ComplianceFlags":
         try:
             return cls(value)
         except ValueError:

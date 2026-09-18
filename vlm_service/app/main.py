@@ -33,7 +33,7 @@ async def lifespan(app: FastAPI) -> AsyncIterator[None]:
 
 def create_app() -> FastAPI:
     app = FastAPI(
-        title="Site Cleanliness Analysis Service",
+        title="Site Installation Verification Service",
         version="1.0.0",
         lifespan=lifespan,
     )

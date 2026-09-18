@@ -52,7 +52,7 @@ class Settings(BaseSettings):
 
     # --- Server ---
     log_level: str = Field(default="INFO")
-    app_name: str = Field(default="site-cleanliness-service")
+    app_name: str = Field(default="site-installation-verification-service")
 
 
 @lru_cache

@@ -14,24 +14,27 @@ from datetime import datetime
 from pathlib import Path
 from typing import Sequence
 
-from app.domain.enums import Cleanliness, MessType, ReviewStatus, Severity
-from app.domain.models import AnalysisResult, CleanlinessAssessment
+from app.domain.enums import InstallationStatus, WorkmanshipQuality, DevicePowerStatus,ComplianceFlags, ReviewStatus
+from app.domain.models import AnalysisResult, InstallationAssessment
 
 _SCHEMA = """
 CREATE TABLE IF NOT EXISTS analysis_results (
     id TEXT PRIMARY KEY,
     site_id TEXT NOT NULL,
     image_path TEXT NOT NULL,
-    cleanliness TEXT NOT NULL,
-    mess_types TEXT NOT NULL,
-    severity TEXT NOT NULL,
-    observations TEXT NOT NULL,
+    installation_status TEXT NOT NULL,
+    device_power_status TEXT NOT NULL,
+    workmanship_quality TEXT NOT NULL,
+    compliance_flags TEXT NOT NULL,
+    technical_observations TEXT NOT NULL,
     confidence REAL NOT NULL,
     raw_description TEXT NOT NULL,
     flagged_for_review INTEGER NOT NULL,
     review_status TEXT NOT NULL,
     review_notes TEXT,
-    reviewed_cleanliness TEXT,
+    reviewed_installation_status TEXT,
+    reviewed_device_power_status TEXT,
+    reviewed_workmanship_quality TEXT,
     reviewed_at TEXT,
     created_at TEXT NOT NULL
 );
@@ -41,11 +44,12 @@ CREATE INDEX IF NOT EXISTS idx_results_flagged ON analysis_results(flagged_for_r
 
 
 def _row_to_result(row: sqlite3.Row) -> AnalysisResult:
-    assessment = CleanlinessAssessment(
-        cleanliness=Cleanliness(row["cleanliness"]),
-        mess_types=tuple(MessType(mt) for mt in json.loads(row["mess_types"])),
-        severity=Severity(row["severity"]),
-        observations=tuple(json.loads(row["observations"])),
+    assessment = InstallationAssessment(
+        installation_status=InstallationStatus(row["installation_status"]),
+        device_power_status=DevicePowerStatus(row["device_power_status"]),
+        workmanship_quality=WorkmanshipQuality(row["workmanship_quality"]),
+        compliance_flags=tuple(ComplianceFlags(mt) for mt in json.loads(row["compliance_flags"])),
+        technical_observations=tuple(json.loads(row["technical_observations"])),
         confidence=row["confidence"],
         raw_description=row["raw_description"],
     )
@@ -57,8 +61,14 @@ def _row_to_result(row: sqlite3.Row) -> AnalysisResult:
         flagged_for_review=bool(row["flagged_for_review"]),
         review_status=ReviewStatus(row["review_status"]),
         review_notes=row["review_notes"],
-        reviewed_cleanliness=(
-            Cleanliness(row["reviewed_cleanliness"]) if row["reviewed_cleanliness"] else None
+        reviewed_installation_status=(
+            InstallationStatus(row["reviewed_installation_status"]) if row["reviewed_installation_status"] else None
+        ),
+        reviewed_device_power_status=(
+            InstallationStatus(row["reviewed_device_power_status"]) if row["reviewed_device_power_status"] else None
+        ),
+        reviewed_workmanship_quality=(
+            InstallationStatus(row["reviewed_workmanship_quality"]) if row["reviewed_workmanship_quality"] else None
         ),
         reviewed_at=(
             datetime.fromisoformat(row["reviewed_at"]) if row["reviewed_at"] else None
@@ -90,26 +100,31 @@ class SQLiteResultsRepository:
             conn.execute(
                 """
                 INSERT INTO analysis_results (
-                    id, site_id, image_path, cleanliness, mess_types, severity,
-                    observations, confidence, raw_description, flagged_for_review,
-                    review_status, review_notes, reviewed_cleanliness, reviewed_at,
+                    id, site_id, image_path, installation_status, device_power_status,
+                    workmanship_quality, compliance_flags, technical_observations, 
+                    confidence, raw_description, flagged_for_review, review_status, 
+                    review_notes, reviewed_installation_status, reviewed_device_power_on
+                    reviewed_workmanship_quality, reviewed_at,
                     created_at
-                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
                 """,
                 (
                     result.id,
                     result.site_id,
                     result.image_path,
-                    result.assessment.cleanliness.value,
-                    json.dumps([mt.value for mt in result.assessment.mess_types]),
-                    result.assessment.severity.value,
-                    json.dumps(list(result.assessment.observations)),
+                    result.assessment.installation_status.value,
+                    json.dumps([mt.value for mt in result.assessment.compliance_flags]),
+                    result.assessment.device_power_status.value,
+                    result.assessment.workmanship_quality.value,
+                    json.dumps(list(result.assessment.technical_observations)),
                     result.assessment.confidence,
                     result.assessment.raw_description,
                     int(result.flagged_for_review),
                     result.review_status.value,
                     result.review_notes,
-                    result.reviewed_cleanliness.value if result.reviewed_cleanliness else None,
+                    result.reviewed_installation_status.value if result.reviewed_installation_status else None,
+                    result.reviewed_device_power_status.value if result.reviewed_device_power_status else None,
+                    result.reviewed_workmanship_quality.value if result.reviewed_workmanship_quality else None,
                     result.reviewed_at.isoformat() if result.reviewed_at else None,
                     result.created_at.isoformat(),
                 ),
@@ -121,14 +136,14 @@ class SQLiteResultsRepository:
                 """
                 UPDATE analysis_results SET
                     flagged_for_review = ?, review_status = ?, review_notes = ?,
-                    reviewed_cleanliness = ?, reviewed_at = ?
+                    reviewed_installation_status = ?, reviewed_at = ?
                 WHERE id = ?
                 """,
                 (
                     int(result.flagged_for_review),
                     result.review_status.value,
                     result.review_notes,
-                    result.reviewed_cleanliness.value if result.reviewed_cleanliness else None,
+                    result.reviewed_installation_status.value if result.reviewed_installation_status else None,
                     result.reviewed_at.isoformat() if result.reviewed_at else None,
                     result.id,
                 ),

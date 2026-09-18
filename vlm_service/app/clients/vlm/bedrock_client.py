@@ -1,4 +1,4 @@
-"""AWS Bedrock adapter for the cleanliness-assessment VLM call.
+"""AWS Bedrock adapter for the installation-assessment VLM call.
 
 Implements `domain.interfaces.VLMClient` using Bedrock's Converse API, which
 provides a single request/response shape across model families (Anthropic,
@@ -23,7 +23,7 @@ from app.clients.vlm.prompt import SYSTEM_PROMPT, USER_PROMPT
 from app.clients.vlm.schemas import try_parse_raw_payload
 from app.core.logging import get_logger
 from app.domain.errors import VLMResponseError, VLMUnavailableError
-from app.domain.models import CleanlinessAssessment
+from app.domain.models import InstallationAssessment
 
 logger = get_logger(__name__)
 
@@ -77,7 +77,7 @@ class BedrockVLMClient:
             "inferenceConfig": {"temperature": 0.0, "maxTokens": self._max_tokens},
         }
 
-    async def assess_image(self, image_bytes: bytes, mime_type: str) -> CleanlinessAssessment:
+    async def assess_image(self, image_bytes: bytes, mime_type: str) -> InstallationAssessment:
         kwargs = self._build_converse_kwargs(image_bytes, mime_type)
         raw_text = await self._call_with_retries(kwargs)
         parsed = try_parse_raw_payload(raw_text)

@@ -491,7 +491,7 @@ wheels = [
 ]
 
 [[package]]
-name = "site-cleanliness-service"
+name = "site-installation-verification"
 version = "1.0.0"
 source = { virtual = "." }
 dependencies = [

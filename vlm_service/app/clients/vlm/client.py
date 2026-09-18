@@ -21,7 +21,7 @@ from app.clients.vlm.schemas import (
 )
 from app.core.logging import get_logger
 from app.domain.errors import VLMResponseError, VLMUnavailableError
-from app.domain.models import CleanlinessAssessment
+from app.domain.models import InstallationAssessment
 
 logger = get_logger(__name__)
 
@@ -73,13 +73,13 @@ class OpenAICompatibleVLMClient:
             response_format={"type": "text"},
         )
 
-    async def assess_image(self, image_bytes: bytes, mime_type: str) -> CleanlinessAssessment:
+    async def assess_image(self, image_bytes: bytes, mime_type: str) -> InstallationAssessment:
         payload = self._build_request(image_bytes, mime_type)
         raw_text = await self._call_with_retries(payload)
         parsed = try_parse_raw_payload(raw_text)
         if parsed is None:
             raise VLMResponseError(
-                f"VLM response could not be parsed as JSON: {raw_text[:200]!r}"
+                f"VLM response could not be parsed as JSON: {raw_text!r}"
             )
         return normalize_assessment(parsed)
 

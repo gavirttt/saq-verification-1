@@ -1,7 +1,7 @@
 [project]
-name = "site-cleanliness-service"
+name = "site-installation-verification"
 version = "1.0.0"
-description = "Backend service that assesses site image cleanliness via a locally-hosted VLM or an AWS bedrock hosted VLM"
+description = "Backend service that verifies site installation via a locally-hosted VLM or an AWS bedrock hosted VLM"
 requires-python = ">=3.11"
 dependencies = [
     "fastapi==0.115.0",

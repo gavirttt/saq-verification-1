@@ -7,7 +7,7 @@ from datetime import datetime
 
 from pydantic import BaseModel, Field
 
-from app.domain.enums import AnalysisJobStatus, Cleanliness, MessType, ReviewStatus, Severity
+from app.domain.enums import InstallationStatus, DevicePowerStatus, WorkmanshipQuality, ComplianceFlags, AnalysisJobStatus, ReviewStatus
 from app.domain.models import AnalysisJob, AnalysisResult
 
 
@@ -44,11 +44,12 @@ class AnalysisJobResponse(BaseModel):
         )
 
 
-class CleanlinessAssessmentResponse(BaseModel):
-    cleanliness: Cleanliness
-    mess_types: list[MessType]
-    severity: Severity
-    observations: list[str]
+class InstallationAssessmentResponse(BaseModel):
+    installation_status: InstallationStatus
+    device_power_status: DevicePowerStatus
+    workmanship_quality: WorkmanshipQuality
+    compliance_flags: list[ComplianceFlags]
+    technical_observations: list[str]
     confidence: float
     raw_description: str
 
@@ -57,11 +58,11 @@ class AnalysisResultResponse(BaseModel):
     id: str
     site_id: str
     image_path: str
-    assessment: CleanlinessAssessmentResponse
+    assessment: InstallationAssessmentResponse
     flagged_for_review: bool
     review_status: ReviewStatus
     review_notes: str | None
-    reviewed_cleanliness: Cleanliness | None
+    reviewed_installation_status: InstallationStatus | None
     created_at: datetime
     reviewed_at: datetime | None
 
@@ -71,18 +72,19 @@ class AnalysisResultResponse(BaseModel):
             id=result.id,
             site_id=result.site_id,
             image_path=result.image_path,
-            assessment=CleanlinessAssessmentResponse(
-                cleanliness=result.assessment.cleanliness,
-                mess_types=list(result.assessment.mess_types),
-                severity=result.assessment.severity,
-                observations=list(result.assessment.observations),
+            assessment=InstallationAssessmentResponse(
+                installation_status=result.assessment.installation_status,
+                device_power_status=result.assessment.device_power_status,
+                workmanship_quality=result.assessment.workmanship_quality,
+                compliance_flags=list(result.assessment.compliance_flags),
+                technical_observations=list(result.assessment.technical_observations),
                 confidence=result.assessment.confidence,
                 raw_description=result.assessment.raw_description,
             ),
             flagged_for_review=result.flagged_for_review,
             review_status=result.review_status,
             review_notes=result.review_notes,
-            reviewed_cleanliness=result.reviewed_cleanliness,
+            reviewed_installation_status=result.reviewed_installation_status,
             created_at=result.created_at,
             reviewed_at=result.reviewed_at,
         )

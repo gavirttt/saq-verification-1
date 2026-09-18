@@ -1,4 +1,4 @@
-"""HTTP routes for triggering and querying site cleanliness analysis.
+"""HTTP routes for triggering and querying site installation analysis.
 
 No business logic here — routes validate/parse input, call the service,
 and map domain models to response schemas. Errors propagate as domain

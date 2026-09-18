@@ -7,11 +7,12 @@ from datetime import datetime, timezone
 from pathlib import PurePosixPath
 
 from app.domain.enums import (
+    InstallationStatus,
+    DevicePowerStatus,
+    WorkmanshipQuality,
+    ComplianceFlags,
     AnalysisJobStatus,
-    Cleanliness,
-    MessType,
     ReviewStatus,
-    Severity,
 )
 
 
@@ -37,36 +38,41 @@ class ImageRef:
 
 
 @dataclass(frozen=True)
-class CleanlinessAssessment:
+class InstallationAssessment:
     """Normalized, validated result of a single VLM call for one image."""
 
-    cleanliness: Cleanliness
-    mess_types: tuple[MessType, ...]
-    severity: Severity
-    observations: tuple[str, ...]
+    installation_status: InstallationStatus
+    device_power_status: DevicePowerStatus
+    workmanship_quality: WorkmanshipQuality
+    compliance_flags: tuple[ComplianceFlags, ...]
+    technical_observations: tuple[str, ...]
     confidence: float
     raw_description: str
 
     def needs_review(self, confidence_threshold: float) -> bool:
         return (
-            self.cleanliness in (Cleanliness.MESSY, Cleanliness.UNCLEAR)
+            self.installation_status in (InstallationStatus.FAIL, InstallationStatus.INCOMPLETE)
+            or self.device_power_status in (DevicePowerStatus.RED, DevicePowerStatus.OFF, DevicePowerStatus.UNCLEAR)
+            or self.workmanship_quality is WorkmanshipQuality.POOR
             or self.confidence < confidence_threshold
         )
 
 
 @dataclass
 class AnalysisResult:
-    """One persisted record: an image plus its cleanliness assessment."""
+    """One persisted record: an image plus its installation assessment."""
 
     site_id: str
     image_path: str
-    assessment: CleanlinessAssessment
+    assessment: InstallationAssessment
     id: str = field(default_factory=_new_id)
     created_at: datetime = field(default_factory=_utcnow)
     flagged_for_review: bool = False
     review_status: ReviewStatus = ReviewStatus.PENDING
     review_notes: str | None = None
-    reviewed_cleanliness: Cleanliness | None = None
+    reviewed_installation_status: InstallationStatus | None = None
+    reviewed_device_power_status: DevicePowerStatus | None = None
+    reviewed_workmanship_quality: WorkmanshipQuality | None = None
     reviewed_at: datetime | None = None
 
 
@@ -92,5 +98,7 @@ class HumanReviewDecision:
 
     result_id: str
     approve: bool
-    reclassified_cleanliness: Cleanliness | None = None
+    reclassified_installation_status: InstallationStatus | None = None
+    reclassified_device_power_status: DevicePowerStatus | None = None
+    reclassified_workmanship_quality: WorkmanshipQuality | None = None
     notes: str | None = None

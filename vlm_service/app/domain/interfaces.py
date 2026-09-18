@@ -5,7 +5,7 @@ from __future__ import annotations
 
 from typing import Protocol, Sequence
 
-from app.domain.models import AnalysisJob, AnalysisResult, CleanlinessAssessment, ImageRef
+from app.domain.models import AnalysisJob, AnalysisResult, InstallationAssessment, ImageRef
 
 
 class VLMClient(Protocol):
@@ -13,9 +13,9 @@ class VLMClient(Protocol):
     clients/vlm and MUST NOT leak provider-specific types through this
     boundary — only domain types cross it."""
 
-    async def assess_image(self, image_bytes: bytes, mime_type: str) -> CleanlinessAssessment:
+    async def assess_image(self, image_bytes: bytes, mime_type: str) -> InstallationAssessment:
         """Send one preprocessed image to the VLM and return a normalized,
-        validated CleanlinessAssessment. Raises VLMUnavailableError or
+        validated InstallationAssessment. Raises VLMUnavailableError or
         VLMResponseError (domain errors) on failure."""
         ...
 

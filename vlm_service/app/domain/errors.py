@@ -31,7 +31,7 @@ class VLMUnavailableError(DomainError):
 
 class VLMResponseError(DomainError):
     """Raised when the VLM responded but its content could not be
-    normalized into a CleanlinessAssessment even after repair attempts."""
+    normalized into a InstallationAssessment even after repair attempts."""
 
     def __init__(self, message: str) -> None:
         super().__init__(message)

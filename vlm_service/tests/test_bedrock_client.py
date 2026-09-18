@@ -9,7 +9,7 @@ import pytest
 from botocore.exceptions import ClientError
 
 from app.clients.vlm.bedrock_client import BedrockVLMClient
-from app.domain.enums import Cleanliness
+from app.domain.enums import InstallationStatus
 from app.domain.errors import VLMResponseError, VLMUnavailableError
 
 
@@ -40,14 +40,15 @@ class FakeBedrockRuntimeClient:
 
 
 @pytest.mark.asyncio
-async def test_bedrock_client_parses_clean_assessment():
+async def test_bedrock_client_parses_installation_assessment():
     payload = {
-        "cleanliness": "clean",
-        "mess_types": [],
-        "severity": "none",
-        "observations": [],
+        "installation_status": "pass",
+        "device_power_status": "green",
+        "workmanship_quality": "acceptable",
+        "compliance_flags": [],
+        "technical_observations": [],
         "confidence": 0.95,
-        "raw_description": "Tidy desk.",
+        "raw_description": "valid installation",
     }
     fake_client = FakeBedrockRuntimeClient([_converse_response(payload)])
     client = BedrockVLMClient(
@@ -58,7 +59,7 @@ async def test_bedrock_client_parses_clean_assessment():
 
     result = await client.assess_image(b"fake-jpeg-bytes", "image/jpeg")
 
-    assert result.cleanliness == Cleanliness.CLEAN
+    assert result.installation_status == InstallationStatus.PASS
     assert result.confidence == 0.95
     assert len(fake_client.calls) == 1
     assert fake_client.calls[0]["modelId"] == "amazon.nova-lite-v1:0"
@@ -67,10 +68,10 @@ async def test_bedrock_client_parses_clean_assessment():
 @pytest.mark.asyncio
 async def test_bedrock_client_retries_on_throttling_then_succeeds():
     payload = {
-        "cleanliness": "messy",
-        "mess_types": ["clutter"],
-        "severity": "moderate",
-        "observations": ["boxes"],
+        "installation_status": "fail",
+        "device_power_status": "red",
+        "mess_types": ["unsecured_cables"],
+        "technical_observations": ["cables are not ziptied"],
         "confidence": 0.8,
         "raw_description": "Cluttered.",
     }
@@ -88,7 +89,7 @@ async def test_bedrock_client_retries_on_throttling_then_succeeds():
 
     result = await client.assess_image(b"fake-jpeg-bytes", "image/jpeg")
 
-    assert result.cleanliness == Cleanliness.MESSY
+    assert result.installation_status == InstallationStatus.FAIL
     assert len(fake_client.calls) == 2
 
 

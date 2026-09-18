@@ -28,7 +28,9 @@ class ReviewService:
             result.review_status = ReviewStatus.APPROVED
         else:
             result.review_status = ReviewStatus.RECLASSIFIED
-            result.reviewed_cleanliness = decision.reclassified_cleanliness
+            result.reviewed_installation_status = decision.reclassified_installation_status
+            result.reviewed_device_power_status = decision.reclassified_device_power_status
+            result.reviewed_workmanship_quality = decision.reclassified_workmanship_quality
 
         result.flagged_for_review = False
         await self._results_repository.update(result)

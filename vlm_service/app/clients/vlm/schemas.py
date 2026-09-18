@@ -2,7 +2,7 @@
 
 These types are intentionally private to `clients.vlm` — nothing outside
 this package may import them. The rest of the codebase only ever sees
-`app.domain.models.CleanlinessAssessment`.
+`app.domain.models.InstallationAssessment`.
 """
 from __future__ import annotations
 
@@ -14,14 +14,15 @@ from pydantic import BaseModel, Field, ValidationError, field_validator
 class RawAssessmentPayload(BaseModel):
     """Schema of the JSON object we ask the model to produce. Validated
     loosely here (raw strings), then normalized/coerced into the domain
-    CleanlinessAssessment by `clients.vlm.client`."""
+    InstallationAssessment by `clients.vlm.client`."""
 
-    cleanliness: str
-    mess_types: list[str] = Field(default_factory=list)
-    severity: str
-    observations: list[str] = Field(default_factory=list)
-    confidence: float
+    installation_status: str
+    device_power_status: str
+    workmanship_quality: str
+    compliance_flags: list[str] = Field(default_factory=list)
+    technical_observations: list[str] = Field(default_factory=list)
     raw_description: str = ""
+    confidence: float
 
     @field_validator("confidence")
     @classmethod

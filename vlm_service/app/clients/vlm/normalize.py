@@ -1,5 +1,5 @@
 """Provider-agnostic normalization from a parsed raw payload to the domain
-CleanlinessAssessment. Every concrete VLM adapter (local OpenAI-compatible,
+InstallationAssessment. Every concrete VLM adapter (local OpenAI-compatible,
 Bedrock, etc.) parses its own wire format into a RawAssessmentPayload, then
 calls `normalize_assessment` here so the coercion/repair rules live in
 exactly one place.
@@ -7,35 +7,25 @@ exactly one place.
 from __future__ import annotations
 
 from app.clients.vlm.schemas import RawAssessmentPayload
-from app.domain.enums import Cleanliness, MessType, Severity
-from app.domain.models import CleanlinessAssessment
+from app.domain.enums import InstallationStatus, DevicePowerStatus, WorkmanshipQuality, ComplianceFlags
+from app.domain.models import InstallationAssessment
 
 
-def normalize_assessment(raw: RawAssessmentPayload) -> CleanlinessAssessment:
-    try:
-        cleanliness = Cleanliness(raw.cleanliness.strip().lower())
-    except ValueError:
-        cleanliness = Cleanliness.UNCLEAR
+def normalize_assessment(raw: RawAssessmentPayload) -> InstallationAssessment:
+    installation_status = InstallationStatus.coerce(raw.installation_status, fallback=InstallationStatus.INCOMPLETE)
+    device_power_status = DevicePowerStatus.coerce(raw.device_power_status, fallback=DevicePowerStatus.UNCLEAR)
+    workmanship_quality = WorkmanshipQuality.coerce(raw.workmanship_quality, fallback=WorkmanshipQuality.ACCEPTABLE)
 
-    mess_types = tuple(MessType.coerce(mt.strip().lower()) for mt in raw.mess_types)
-
-    try:
-        severity = Severity(raw.severity.strip().lower())
-    except ValueError:
-        severity = Severity.NONE if cleanliness == Cleanliness.CLEAN else Severity.MODERATE
-
-    if cleanliness == Cleanliness.CLEAN:
-        severity = Severity.NONE
-    elif severity == Severity.NONE:
-        severity = Severity.MINOR
+    compliance_flags = tuple(ComplianceFlags.coerce(mt.strip().lower()) for mt in raw.compliance_flags)
 
     confidence = max(0.0, min(1.0, raw.confidence))
 
-    return CleanlinessAssessment(
-        cleanliness=cleanliness,
-        mess_types=mess_types,
-        severity=severity,
-        observations=tuple(raw.observations),
+    return InstallationAssessment(
+        installation_status=installation_status,
+        workmanship_quality=workmanship_quality,
+        device_power_status = device_power_status,
+        compliance_flags=compliance_flags,
+        technical_observations=tuple(raw.technical_observations),
         confidence=confidence,
         raw_description=raw.raw_description,
     )

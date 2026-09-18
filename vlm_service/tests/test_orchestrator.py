@@ -8,8 +8,8 @@ import io
 import pytest
 from PIL import Image
 
-from app.domain.enums import AnalysisJobStatus, Cleanliness, MessType, Severity
-from app.domain.models import AnalysisJob, AnalysisResult, CleanlinessAssessment, ImageRef
+from app.domain.enums import AnalysisJobStatus, InstallationStatus, DevicePowerStatus, WorkmanshipQuality, ComplianceFlags
+from app.domain.models import AnalysisJob, AnalysisResult, InstallationAssessment, ImageRef
 from app.services.analysis.image_processor import ImagePreprocessor
 from app.services.analysis.orchestrator import AnalysisOrchestrator
 
@@ -17,11 +17,11 @@ from app.services.analysis.orchestrator import AnalysisOrchestrator
 class FakeVLMClient:
     """Implements the VLMClient Protocol without any network I/O."""
 
-    def __init__(self, assessment: CleanlinessAssessment) -> None:
+    def __init__(self, assessment: InstallationAssessment) -> None:
         self._assessment = assessment
         self.calls = 0
 
-    async def assess_image(self, image_bytes: bytes, mime_type: str) -> CleanlinessAssessment:
+    async def assess_image(self, image_bytes: bytes, mime_type: str) -> InstallationAssessment:
         self.calls += 1
         return self._assessment
 
@@ -75,26 +75,27 @@ class FakeImageSource:
         return buf.getvalue()
 
 
-def _messy_assessment() -> CleanlinessAssessment:
-    return CleanlinessAssessment(
-        cleanliness=Cleanliness.MESSY,
-        mess_types=(MessType.CLUTTER,),
-        severity=Severity.MODERATE,
-        observations=("boxes in hallway",),
+def _fail_assessment() -> InstallationAssessment:
+    return InstallationAssessment(
+        installation_status=InstallationStatus.FAIL,
+        device_power_status=DevicePowerStatus.RED,
+        workmanship_quality=WorkmanshipQuality.POOR,
+        compliance_flags=(ComplianceFlags.UNSECURED_CABLES,),
+        technical_observations=("cables are not ziptied",),
         confidence=0.9,
-        raw_description="Cluttered hallway with boxes.",
+        raw_description="Cluttered.",
     )
 
 
 @pytest.mark.asyncio
-async def test_orchestrator_processes_all_images_and_flags_messy_results():
+async def test_orchestrator_processes_all_images_and_flags_failed_results():
     from pathlib import PurePosixPath
 
     refs = [
         ImageRef(site_id="site-1", path=PurePosixPath("/data/site-1/a.jpg"), size_bytes=2048),
         ImageRef(site_id="site-1", path=PurePosixPath("/data/site-1/b.jpg"), size_bytes=2048),
     ]
-    vlm_client = FakeVLMClient(_messy_assessment())
+    vlm_client = FakeVLMClient(_fail_assessment())
     results_repo = FakeResultsRepository()
     jobs_repo = FakeJobsRepository()
 
@@ -115,7 +116,7 @@ async def test_orchestrator_processes_all_images_and_flags_messy_results():
     assert vlm_client.calls == 2
     assert len(results_repo.saved) == 2
     assert all(r.flagged_for_review for r in results_repo.saved)
-    assert all(r.assessment.cleanliness == Cleanliness.MESSY for r in results_repo.saved)
+    assert all(r.assessment.installation_status == InstallationStatus.FAIL for r in results_repo.saved)
 
 
 @pytest.mark.asyncio
@@ -125,7 +126,7 @@ async def test_orchestrator_raises_for_site_with_no_images():
     orchestrator = AnalysisOrchestrator(
         image_source=FakeImageSource([]),
         image_preprocessor=ImagePreprocessor(max_dimension_px=512),
-        vlm_client=FakeVLMClient(_messy_assessment()),
+        vlm_client=FakeVLMClient(_fail_assessment()),
         results_repository=FakeResultsRepository(),
         jobs_repository=FakeJobsRepository(),
         review_confidence_threshold=0.6,
