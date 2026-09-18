@@ -22,6 +22,7 @@ class Settings(BaseSettings):
     vlm_timeout_seconds: float = Field(default=60.0)
     vlm_max_retries: int = Field(default=3)
     vlm_retry_backoff_seconds: float = Field(default=1.5)
+    vlm_max_tokens: int = Field(default=1500)
     # Optional attribution headers some OpenAI-compatible providers use
     # (e.g. OpenRouter's leaderboard attribution). Left blank/unset for
     # providers that don't use them (local servers, etc.) — no effect there.
@@ -34,7 +35,7 @@ class Settings(BaseSettings):
     # attached IAM role). Only non-secret routing config lives in Settings.
     bedrock_model_id: str = Field(default="amazon.nova-lite-v1:0")
     bedrock_region: str = Field(default="us-east-1")
-    bedrock_max_tokens: int = Field(default=800)
+    bedrock_max_tokens: int = Field(default=1500)
     bedrock_max_retries: int = Field(default=3)
     bedrock_retry_backoff_seconds: float = Field(default=1.5)
 

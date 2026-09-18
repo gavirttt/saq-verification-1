@@ -69,6 +69,7 @@ def _build_vlm_client(settings: Settings) -> tuple[VLMClient, httpx.AsyncClient 
         max_retries=settings.vlm_max_retries,
         retry_backoff_seconds=settings.vlm_retry_backoff_seconds,
         http_client=http_client,
+        max_tokens=settings.vlm_max_tokens,
     )
     return vlm_client, http_client
 

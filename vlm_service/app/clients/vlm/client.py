@@ -39,6 +39,7 @@ class OpenAICompatibleVLMClient:
         retry_backoff_seconds: float = 1.5,
         http_client: httpx.AsyncClient | None = None,
         extra_headers: dict[str, str] | None = None,
+        max_tokens: int = 1500,
     ) -> None:
         self._base_url = base_url.rstrip("/")
         self._api_key = api_key
@@ -46,6 +47,7 @@ class OpenAICompatibleVLMClient:
         self._timeout = timeout_seconds
         self._max_retries = max_retries
         self._retry_backoff = retry_backoff_seconds
+        self._max_tokens = max_tokens
         # Allow injection of a shared/test client; otherwise own one lazily.
         self._external_client = http_client
         # Optional provider-specific headers (e.g. OpenRouter's HTTP-Referer
@@ -69,7 +71,7 @@ class OpenAICompatibleVLMClient:
                 ),
             ],
             temperature=0.0,
-            max_tokens=800,
+            max_tokens=self._max_tokens,
             response_format={"type": "text"},
         )
 
