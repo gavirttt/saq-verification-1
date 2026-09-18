@@ -101,21 +101,21 @@ class SQLiteResultsRepository:
                 """
                 INSERT INTO analysis_results (
                     id, site_id, image_path, installation_status, device_power_status,
-                    workmanship_quality, compliance_flags, technical_observations, 
-                    confidence, raw_description, flagged_for_review, review_status, 
-                    review_notes, reviewed_installation_status, reviewed_device_power_on
+                    workmanship_quality, compliance_flags, technical_observations,
+                    confidence, raw_description, flagged_for_review, review_status,
+                    review_notes, reviewed_installation_status, reviewed_device_power_status,
                     reviewed_workmanship_quality, reviewed_at,
                     created_at
-                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
                 """,
                 (
                     result.id,
                     result.site_id,
                     result.image_path,
                     result.assessment.installation_status.value,
-                    json.dumps([mt.value for mt in result.assessment.compliance_flags]),
                     result.assessment.device_power_status.value,
                     result.assessment.workmanship_quality.value,
+                    json.dumps([mt.value for mt in result.assessment.compliance_flags]),
                     json.dumps(list(result.assessment.technical_observations)),
                     result.assessment.confidence,
                     result.assessment.raw_description,
