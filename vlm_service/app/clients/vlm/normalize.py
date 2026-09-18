@@ -1,5 +1,5 @@
 """Provider-agnostic normalization from a parsed raw payload to the domain
-InstallationAssessment. Every concrete VLM adapter (local OpenAI-compatible,
+InstallationAssessment. Every concrete VLM adapter (OpenAI-compatible,
 Bedrock, etc.) parses its own wire format into a RawAssessmentPayload, then
 calls `normalize_assessment` here so the coercion/repair rules live in
 exactly one place.

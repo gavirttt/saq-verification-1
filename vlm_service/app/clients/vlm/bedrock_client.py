@@ -8,8 +8,8 @@ in the codebase that knows about boto3, the Bedrock request/response shape,
 or the chosen model id — everything else only ever sees domain types.
 
 `boto3` is synchronous, so calls are dispatched via `asyncio.to_thread` to
-keep this adapter's public interface async and consistent with the local
-HTTP-based client.
+keep this adapter's public interface async and consistent with the OpenAI-compatible
+client.
 """
 from __future__ import annotations
 
